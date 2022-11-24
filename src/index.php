@@ -1,14 +1,17 @@
 <?php
-require '../vendor/autoload.php';
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
-use Symfony\Component\Dotenv\Dotenv;
 
-$dotenv = new Dotenv();
+require(__DIR__ . '/../vendor/autoload.php');
+
+$dotenv = new Symfony\Component\Dotenv\Dotenv();
 $dotenv->load('../../.env');
 
+$log = new Monolog\Logger('info');
+$log->pushHandler(new Monolog\Handler\StreamHandler(__DIR__ . '/info.log', Monolog\Level::Info));
+
 if ($_POST && $_POST["name"] && $_POST["email"] && $_POST["complaint"]) {
-    $mail = new PHPMailer(true);
+    $log->info('Recieved:', ['Name' => $_POST["name"], 'Email' => $_POST["email"], 'Complaint' => $_POST["complaint"]]);
+    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+
     try {
         $mail->isSMTP();
         $mail->Host = 'smtp.strato.com';
@@ -16,14 +19,14 @@ if ($_POST && $_POST["name"] && $_POST["email"] && $_POST["complaint"]) {
         $mail->SMTPAuth = true;
         $mail->Username = 'stuff@pjotrclaassen.nl';
         $mail->Password = $_ENV['MAILPASS'];
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
+        $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
 
         $mail->setFrom('stuff@pjotrclaassen.nl', 'Pjotr Claassen');
         $mail->addAddress($_POST['email'], $_POST['name']);
         $mail->addCC('stuff@pjotrclaassen.nl');
 
         $mail->Subject = 'Uw klacht is in behandeling';
-        $mail->Body = $_POST["name"].' - '.$_POST["email"].' - '.$_POST["complaint"];
+        $mail->Body = $_POST["name"] . ' - ' . $_POST["email"] . ' - ' . $_POST["complaint"];
         $mail->send();
         echo 'Message has been sent';
     } catch (Exception $e) {
@@ -33,13 +36,14 @@ if ($_POST && $_POST["name"] && $_POST["email"] && $_POST["complaint"]) {
 
 ?>
 <html>
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
 </head>
+
 <body>
     <form method="post" style="display: flex; flex-direction: column;">
         <label for="nameInput">Name:</label>
@@ -51,5 +55,5 @@ if ($_POST && $_POST["name"] && $_POST["email"] && $_POST["complaint"]) {
         <button type="submit">Submit</button>
     </form>
 </body>
-</html>
 
+</html>
